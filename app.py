@@ -18,4 +18,4 @@ def address_exposure_direct():
     "success": True
   }
 
-  return sample_res 
+  return sample_res
