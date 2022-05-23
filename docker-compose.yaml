@@ -1,8 +1,56 @@
 services:
   trm-app:
-    image: trm-takehome:latest
+    image: meyerkev248/trm-takehome:latest
     environment:
-      FLASK_APP: app.py
+      FLASK_APP: /app/app.py
       FLASK_ENV: development
+    # 5000 is eaten by Airplay on OSX sorry
     ports:
       - 4000:5000
+    depends_on:
+      - redis
+      - master
+    volumes:
+      - ./utils/:/app/utils/
+    # wait-for-it.sh literally "waits for it"
+    entrypoint: ["/usr/bin/dumb-init", "--",
+                 "/app/utils/wait-for-it.sh", "master:5432", "--"]
+    command: [ "flask", "run", "--host=0.0.0.0" ]
+  redis:
+    image: redis:7.0-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - "cache:/data"
+  master:
+    container_name: "${COMPOSE_PROJECT_NAME:-citus}_master"
+    image: "citusdata/citus:10.2.5"
+    ports: ["${COORDINATOR_EXTERNAL_PORT:-5432}:5432"]
+    labels: ["com.citusdata.role=Master"]
+    environment: &AUTH
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      PGUSER: "${POSTGRES_USER:-postgres}"
+      PGPASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_HOST_AUTH_METHOD: "${POSTGRES_HOST_AUTH_METHOD:-trust}"
+  worker:
+    image: "citusdata/citus:10.2.5"
+    labels: ["com.citusdata.role=Worker"]
+    depends_on: [manager]
+    environment: *AUTH
+    command: "/wait-for-manager.sh"
+    volumes:
+      - healthcheck-volume:/healthcheck
+  manager:
+    container_name: "${COMPOSE_PROJECT_NAME:-citus}_manager"
+    image: "citusdata/membership-manager:0.3.0"
+    volumes:
+      - "${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock"
+      - healthcheck-volume:/healthcheck
+    depends_on: [master]
+    environment: *AUTH
+volumes:
+  cache:
+  healthcheck-volume:
