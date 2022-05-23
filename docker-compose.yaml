@@ -14,7 +14,9 @@ services:
       - ./utils/:/app/utils/
     # wait-for-it.sh literally "waits for it"
     entrypoint: ["/usr/bin/dumb-init", "--",
-                 "/app/utils/wait-for-it.sh", "master:5432", "--"]
+                 "/app/utils/wait-for-it.sh", "master:5432", "--",
+                 "/app/utils/wait-for-it.sh", "redis:6379", "--"
+                  ]
     command: [ "flask", "run", "--host=0.0.0.0" ]
   redis:
     image: redis:7.0-alpine
