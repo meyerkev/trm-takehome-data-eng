@@ -42,7 +42,7 @@ pysocks
 python-bitcoinlib
 pytz
 pyyaml
-readline
+gnureadline
 regex
 requests
 rsa

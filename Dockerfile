@@ -4,7 +4,7 @@ RUN apt-get update && apt-get upgrade -y
 RUN apt-get install dumb-init -y
 
 COPY pip-pinned-requirements.txt .
-RUN pip install -r pip-pinned-requirements.txt
+RUN export MAKEFLAGS="-j$(nproc)" && pip install -r pip-pinned-requirements.txt
 
 COPY app.py .
 
