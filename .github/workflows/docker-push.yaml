@@ -15,10 +15,16 @@ on:
   push:
     branches:
       - "master"
+    pull_request:
+      branches: 
+        - "master"
+
+# Add permissions block here
+permissions:
+  id-token: write
+  contents: read
 
 env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_DEFAULT_REGION: us-east-2
 jobs:
   docker:
@@ -52,6 +58,15 @@ jobs:
       #   with:
       #     username: ${{ secrets.DOCKERHUB_USERNAME }}
       #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::386145735201:role/github-actions-role
+          aws-region: us-east-2
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v1
+          
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
@@ -60,6 +75,6 @@ jobs:
           # Annoying but required
           # https://github.community/t/workflow-dispatch-inputs-in-workflows-with-multiple-triggers/225950
           platforms: ${{ github.event.inputs.platforms || 'linux/amd64' }}
-          build-args: "AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}\nAWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}\nAWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}"
+          build-args: "AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
