@@ -11,7 +11,7 @@ data "tls_certificate" "github_oidc" {
 resource "aws_iam_openid_connect_provider" "github_oidc" {
     url = "https://token.actions.githubusercontent.com"
     client_id_list = ["sts.amazonaws.com"]
-    thumbprint_list = ["74F3A68F16524F15424927704C9506F55A9316BD"]
+    thumbprint_list = [for cert in data.tls_certificate.github_oidc.certificates : cert.sha1_fingerprint ]
 }
 
 #create role to allow github actions to push to ECR
