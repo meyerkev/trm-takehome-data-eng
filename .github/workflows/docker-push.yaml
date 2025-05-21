@@ -16,7 +16,7 @@ on:
     branches:
       - "master"
     pull_request:
-      branches:
+      branches: 
         - "master"
 
 env:
@@ -72,6 +72,6 @@ jobs:
           # Annoying but required
           # https://github.community/t/workflow-dispatch-inputs-in-workflows-with-multiple-triggers/225950
           platforms: ${{ github.event.inputs.platforms || 'linux/amd64' }}
-          build-args: "AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}\nAWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}\nAWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}"
+          build-args: "AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
