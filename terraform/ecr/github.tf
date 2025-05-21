@@ -2,10 +2,16 @@
 
 # enable github oidc provider
 
+# Get the thumbprint for the github oidc provider
+data "tls_certificate" "github_oidc" {
+    url = "https://token.actions.githubusercontent.com"
+}
+
+# Create the github oidc provider
 resource "aws_iam_openid_connect_provider" "github_oidc" {
     url = "https://token.actions.githubusercontent.com"
     client_id_list = ["sts.amazonaws.com"]
-    thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1", "1c58a3a8518e8759bf075b76b750d4f2df264fcd"]
+    thumbprint_list = [for cert in data.tls_certificate.github_oidc.certificates : cert.sha1_fingerprint ]
 }
 
 #create role to allow github actions to push to ECR
