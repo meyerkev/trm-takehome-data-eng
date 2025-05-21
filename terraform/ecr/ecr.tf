@@ -25,6 +25,8 @@ module "ecr" {
     ]
   })
 
+  repository_image_tag_mutability = "MUTABLE"
+
   tags = {
     Terraform   = "true"
     Environment = "interview"
