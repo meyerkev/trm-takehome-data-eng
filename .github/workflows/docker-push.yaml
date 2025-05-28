@@ -71,7 +71,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: src
           file: Dockerfile
           platforms: ${{ github.event.inputs.platforms || 'linux/amd64' }}
           build-args: "AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}"
