@@ -134,6 +134,11 @@ module "eks" {
     ami_type                   = contains(data.aws_ec2_instance_type.eks_node_instance_type.supported_architectures, "arm64") ? "AL2_ARM_64" : "AL2_x86_64"
     instance_types             = [local.eks_node_instance_type]
     iam_role_attach_cni_policy = true
+    
+    # Add ECR permissions
+    iam_role_additional_policies = {
+      AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+    }
 
     tags = {
       "k8s.io/cluster-autoscaler/enabled" = "true"

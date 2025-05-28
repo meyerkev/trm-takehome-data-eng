@@ -3,9 +3,11 @@
 ## No
 terraform {
   required_version = "1.12.0"
-  # Really you ought to clean this up and use a remote backend, but this is an interview and I spin this up A LOT, then run aws-nuke on the account
-  backend "local" {
-    path = "test-interview-helm.tfstate"
+
+  backend "s3" {
+    bucket = "meyerkev-terraform-state"
+    key = "test-interview-helm.tfstate"
+    region = "us-east-2"
   }
 
   required_providers {
