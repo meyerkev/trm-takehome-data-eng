@@ -92,6 +92,11 @@ jobs:
           cd terraform/helm/
           tfenv install
           tfenv use
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::386145735201:role/github-actions-role-terraform
+          aws-region: us-east-2
       - name: terraform plan
         run: |
           cd terraform/helm/
@@ -102,4 +107,4 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo "plan=$(cat plan.out)" | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
-
+      
