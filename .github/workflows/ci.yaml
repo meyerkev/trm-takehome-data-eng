@@ -110,6 +110,8 @@ jobs:
           terraform plan -out=plan.out
           cat plan.out
       - name: write plan.out to the PR only if a PR triggered this workflow
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: github.event_name == 'pull_request'
         run: |
           echo "plan=$(cat plan.out)" | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
