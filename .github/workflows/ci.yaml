@@ -108,7 +108,7 @@ jobs:
         run: |
           aws sts get-caller-identity
           terraform init
-          terraform plan -out plan.out > plan.txt
+          terraform plan -out plan.out | tee plan.txt
       ## TODO: Pulumi has a very nice way to do this, but I'm not sure how to do it with Terraform. 
       - name: Write plan to PR
         working-directory: terraform/helm/
