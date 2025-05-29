@@ -103,21 +103,27 @@ jobs:
       #    role-to-assume: arn:aws:iam::386145735201:role/github-actions-role-terraform
       #    aws-region: us-east-2
       - name: terraform plan
+        id: plan
         run: |
           cd terraform/helm/
           aws sts get-caller-identity
           terraform init
-          terraform plan -out=plan.out
-          cat plan.out
-      - name: write plan.out to the PR only if a PR triggered this workflow
+          terraform plan > ../../plan.out
+      - uses: robburger/terraform-pr-commenter@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "plan=$(cat plan.out)" | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
-      
+          EXPAND_SUMMARY_DETAILS: 'true' # Override global environment variable; expand details just for this step
+        with:
+          commenter_type: plan
+          commenter_input: ${{ format('{0}{1}', steps.plan.outputs.stdout, steps.plan.outputs.stderr) }}
+          commenter_exitcode: ${{ steps.plan.outputs.exitcode }}
   apply:
     runs-on: ubuntu-latest
+    env:
+      AWS_DEFAULT_REGION: us-east-2
+      AWS_REGION: us-east-2
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
     if: ${{ always() && format('refs/heads/{0}', github.event.repository.default_branch) == github.ref }}
     needs: [ plan, docker ]
