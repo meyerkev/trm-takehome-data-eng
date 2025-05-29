@@ -1,9 +1,10 @@
-AWS_ACCOUNT_ID?=386145735201
-AWS_REGION?=us-east-2
+AWS_ACCOUNT_ID ?= 386145735201
+AWS_REGION ?= us-east-2
+IMAGE_TAG ?= latest
 
 .PHONY: docker-build up down reset sh sh-attach push logs
 docker-build:
-	docker buildx build . -t $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/trm-takehome
+	docker buildx build . -t $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/trm-takehome:$(IMAGE_TAG)
 up:
 	docker-compose up -d
 down:
@@ -14,7 +15,7 @@ sh:
 sh-attach:
 	docker-compose exec trm-app bash 
 push: 
-	docker push $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/trm-takehome
+	docker push $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/trm-takehome:$(IMAGE_TAG)
 logs:
 	docker-compose logs -f
 

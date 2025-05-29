@@ -89,6 +89,7 @@ module "eks-auth" {
     }
   ] : [])
   
+  # Minor TODO: Import this role arn from the ECR module
   aws_auth_roles = [
     {
       rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/github-actions-role-terraform"
