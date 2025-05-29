@@ -112,7 +112,9 @@ jobs:
       ## TODO: Pulumi has a very nice way to do this, but I'm not sure how to do it with Terraform. 
       - name: Write plan to PR
         working-directory: terraform/helm/
-        if: github.event_name == 'pull_request'
+        # So if I broke the fork, this would work
+        # https://github.com/cli/cli/issues/8374
+        if: github.event_name == 'pull_request' && false
         run: |
           cat plan.txt | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
         env:
