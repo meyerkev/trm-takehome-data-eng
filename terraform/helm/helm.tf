@@ -176,7 +176,13 @@ resource "helm_release" "trm-deployment-chart" {
     namespace = kubernetes_namespace.trm_takehome.metadata[0].name
     create_namespace = true
     wait = true
-    depends_on = [ helm_release.aws-load-balancer-controller, helm_release.external-dns, helm_release.cluster-autoscaler ]
+    depends_on = [ 
+        helm_release.aws-load-balancer-controller, 
+        helm_release.external-dns, 
+        helm_release.cluster-autoscaler, 
+        kubernetes_namespace.trm_takehome,
+        kubernetes_secret.infura_api_key
+    ]
     
     # Terrible hack to force a redeployment on every helm upgrade. 
     # Since I haven't yet set up semantic versioning, we need to force a redeployment on every helm upgrade.
