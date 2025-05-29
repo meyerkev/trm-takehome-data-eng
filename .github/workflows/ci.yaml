@@ -100,6 +100,7 @@ jobs:
       - name: terraform plan
         run: |
           cd terraform/helm/
+          aws sts get-caller-identity
           terraform init
           terraform plan -out=plan.out
           cat plan.out
@@ -108,3 +109,28 @@ jobs:
         run: |
           echo "plan=$(cat plan.out)" | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
       
+  apply:
+    runs-on: ubuntu-latest
+    needs: [ plan, docker ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          # Install tfenv 
+          git clone --depth=1 https://github.com/tfutils/tfenv.git ~/.tfenv
+          ln -s ~/.tfenv/bin/* /usr/local/bin
+          export PATH="$HOME/.tfenv/bin:$PATH"
+          cd terraform/helm/
+          tfenv install
+          tfenv use
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::386145735201:role/github-actions-role-terraform
+          aws-region: us-east-2
+      - name: terraform apply
+        run: |
+          cd terraform/helm/
+          terraform init
+          terraform apply plan.out
