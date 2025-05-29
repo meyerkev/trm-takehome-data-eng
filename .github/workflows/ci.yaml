@@ -26,6 +26,8 @@ permissions:
 
 env:
   AWS_DEFAULT_REGION: us-east-2
+  AWS_ACCOUNT_ID: 386145735201
+  AWS_REGION: us-east-2
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -81,8 +83,6 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     env:
-      AWS_DEFAULT_REGION: us-east-2
-      AWS_REGION: us-east-2
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
@@ -97,11 +97,11 @@ jobs:
           cd terraform/helm/
           tfenv install
           tfenv use
-      # - name: Configure AWS credentials
-      #  uses: aws-actions/configure-aws-credentials@v4
-      #  with:
-      #    role-to-assume: arn:aws:iam::386145735201:role/github-actions-role-terraform
-      #    aws-region: us-east-2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-actions-role-terraform
+          aws-region: ${{ env.AWS_REGION }}
       - name: terraform plan
         working-directory: terraform/helm/
         id: plan
@@ -122,8 +122,6 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     env:
-      AWS_DEFAULT_REGION: us-east-2
-      AWS_REGION: us-east-2
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
