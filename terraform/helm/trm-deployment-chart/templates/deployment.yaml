@@ -13,10 +13,13 @@ spec:
       {{- include "trm-deployment-chart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        {{- if .Values.forceRedeployment }}
+        deployment.kubernetes.io/timestamp: "{{ now | date "2006-01-02T15:04:05Z07:00" }}"
+        {{- end }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "trm-deployment-chart.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}

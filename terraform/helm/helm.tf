@@ -170,5 +170,20 @@ resource "helm_release" "cluster-autoscaler" {
     depends_on = [ kubernetes_service_account.service_accounts ]
 }
 
-
+resource "helm_release" "trm-deployment-chart" {
+    name = "trm-deployment"
+    chart = "${path.module}/trm-deployment-chart"
+    namespace = kubernetes_namespace.trm_takehome.metadata[0].name
+    create_namespace = true
+    wait = true
+    depends_on = [ helm_release.aws-load-balancer-controller, helm_release.external-dns, helm_release.cluster-autoscaler ]
+    
+    # Terrible hack to force a redeployment on every helm upgrade. 
+    # Since I haven't yet set up semantic versioning, we need to force a redeployment on every helm upgrade.
+    # Hence a magic value that is the current timestamp and thus always changes.
+    set {
+        name = "timestamp"
+        value = timestamp()
+    }
+}
 

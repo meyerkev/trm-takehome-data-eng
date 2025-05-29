@@ -1,0 +1,157 @@
+name: CI/CD workflow
+
+# TODO: Once we get this into production, see what inputs we care about.
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_ref:
+        description: "The branch, tag or SHA to make into a Docker image."
+        required: true
+        default: "master"
+      platforms:
+        description: "Comma-separated list of platform(s) to build an image for"
+        required: true
+        default: "linux/amd64"
+  push:
+    branches:
+      - "master"
+  pull_request:
+    branches: 
+      - "master"
+
+# Add permissions block here
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_DEFAULT_REGION: us-east-2
+  AWS_ACCOUNT_ID: 386145735201
+  AWS_REGION: us-east-2
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          # Empty ref shows up as "Pull the commit we used to deploy this with"
+          ref: ${{ github.event.inputs.deploy_ref }}
+        # It remains insanely annoying that this is required b/c github.sha
+        # doesn't get the sha we just checked out
+      - name: "Get GIT SHA"
+        id: sha
+        run: echo "::set-output name=sha::$(git rev-parse HEAD)"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/trm-takehome
+          tags: |
+            type=ref,event=branch
+            type=raw,value=${{ format('sha-{0}', steps.sha.outputs.sha) }}
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+      # - name: Login to DockerHub
+      #   uses: docker/login-action@v1
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v1
+          
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: src
+          file: src/Dockerfile
+          platforms: ${{ github.event.inputs.platforms || 'linux/amd64,linux/arm64' }}
+          build-args: "AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}"
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          no-cache: true
+
+  plan:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          # Install tfenv 
+          git clone --depth=1 https://github.com/tfutils/tfenv.git ~/.tfenv
+          ln -s ~/.tfenv/bin/* /usr/local/bin
+          export PATH="$HOME/.tfenv/bin:$PATH"
+          cd terraform/helm/
+          tfenv install
+          tfenv use
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-actions-role-terraform
+          aws-region: ${{ env.AWS_REGION }}
+      - name: terraform plan
+        working-directory: terraform/helm/
+        id: plan
+        run: |
+          aws sts get-caller-identity
+          terraform init
+          terraform plan -out plan.out > plan.txt
+      ## TODO: Pulumi has a very nice way to do this, but I'm not sure how to do it with Terraform. 
+      - name: Write plan to PR
+        working-directory: terraform/helm/
+        # So if I broke the fork, this would work
+        # https://github.com/cli/cli/issues/8374
+        if: github.event_name == 'pull_request' && false
+        run: |
+          cat plan.txt | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  apply:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
+    if: ${{ always() && format('refs/heads/{0}', github.event.repository.default_branch) == github.ref }}
+    needs: [ docker ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Terraform
+        run: |
+          # Install tfenv 
+          git clone --depth=1 https://github.com/tfutils/tfenv.git ~/.tfenv
+          ln -s ~/.tfenv/bin/* /usr/local/bin
+          export PATH="$HOME/.tfenv/bin:$PATH"
+          cd terraform/helm/
+          tfenv install
+          tfenv use
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-actions-role-terraform
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
+      - name: terraform apply
+        run: |
+          cd terraform/helm/
+          terraform init
+          terraform plan -out plan.out
+          terraform apply -auto-approve
