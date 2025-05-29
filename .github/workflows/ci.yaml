@@ -103,9 +103,9 @@ jobs:
       #    role-to-assume: arn:aws:iam::386145735201:role/github-actions-role-terraform
       #    aws-region: us-east-2
       - name: terraform plan
+        working-directory: terraform/helm/
         id: plan
         run: |
-          cd terraform/helm/
           aws sts get-caller-identity
           terraform init
           terraform plan -out plan.out > plan.txt
