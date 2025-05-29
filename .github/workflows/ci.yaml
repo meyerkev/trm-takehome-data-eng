@@ -77,3 +77,20 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           no-cache: true
+
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: terraform plan
+        run: |
+          cd terraform/helm/
+          terraform init
+          terraform plan -out=plan.out
+          cat plan.out
+      - name: write plan.out to the PR only if a PR triggered this workflow
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "plan=$(cat plan.out)" | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
+
