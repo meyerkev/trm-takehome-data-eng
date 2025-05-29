@@ -6,7 +6,7 @@ up:
 down:
 	docker-compose down
 sh:
-	docker-compose run -p 4000:5000 --rm trm-app bash 
+	docker-compose run -p 4000:5000 --rm trm-app
 sh-attach:
 	docker-compose exec trm-app bash 
 push: 
