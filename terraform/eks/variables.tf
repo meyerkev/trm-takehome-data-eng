@@ -20,6 +20,7 @@ variable "vpc_cidr" {
 
 variable "interviewee_name" {
   type = string
+  default = "trm-takehome"
 }
 
 variable "cluster_k8s_version" {

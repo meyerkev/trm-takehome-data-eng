@@ -70,9 +70,9 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: Dockerfile
-          platforms: ${{ github.event.inputs.platforms || 'linux/amd64' }}
+          context: src
+          file: src/Dockerfile
+          platforms: ${{ github.event.inputs.platforms || 'linux/amd64,linux/arm64' }}
           build-args: "AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
