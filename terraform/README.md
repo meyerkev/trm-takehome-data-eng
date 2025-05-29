@@ -92,7 +92,7 @@ NAME                                  CLASS   HOSTS   ADDRESS                   
 trm-deployment-trm-deployment-chart   alb     *       k8s-trm-trmdeplo-95dc2494ec-1845807862.us-east-2.elb.amazonaws.com   80      143m
 
 # Our magic LB is k8s-trm-trmdeplo-95dc2494ec-1845807862.us-east-2.elb.amazonaws.com
-## On first boot, this may take <5 minutes to provision>
+## On first boot, this may take <5 minutes to provision
 meyerkev@Kevins-MacBook-Pro-2 helm % curl k8s-trm-trmdeplo-95dc2494ec-1845807862.us-east-2.elb.amazonaws.com/address/balance/0xc94770007dda54cF92009BFF0dE90c06F603a09f
 {"balance":1.2047354718e-05}
 ```
