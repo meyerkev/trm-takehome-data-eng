@@ -110,6 +110,10 @@ jobs:
           terraform init
           terraform plan -out plan.out
           exit 0
+      - run: |
+          echo "exitcode: ${{ steps.plan.outputs.exitcode }}"
+          echo "stdout: ${{ steps.plan.outputs.stdout }}"
+          echo "stderr: ${{ steps.plan.outputs.stderr }}"
       - uses: robburger/terraform-pr-commenter@v1.5
         if: ${{ always() && github.ref != 'refs/heads/master' && (steps.plan.outcome == 'success' || steps.plan.outcome == 'failure') }}
         env:
@@ -118,7 +122,7 @@ jobs:
         with:
           commenter_type: plan
           commenter_input: ${{ format('{0}{1}', steps.plan.outputs.stdout, steps.plan.outputs.stderr) }}
-          commenter_exitcode: ${{ steps.plan.outputs.exitcode || 0 }}
+          commenter_exitcode: ${{ steps.plan.outputs.exitcode }}
   apply:
     runs-on: ubuntu-latest
     env:
