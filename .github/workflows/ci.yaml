@@ -114,7 +114,7 @@ jobs:
           echo "exitcode: ${{ steps.plan.outputs.exitcode }}"
           echo "stdout: ${{ steps.plan.outputs.stdout }}"
           echo "stderr: ${{ steps.plan.outputs.stderr }}"
-      - uses: robburger/terraform-pr-commenter@v1.5
+      - uses: robburger/terraform-pr-commenter@v1.5.0
         if: ${{ always() && github.ref != 'refs/heads/master' && (steps.plan.outcome == 'success' || steps.plan.outcome == 'failure') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
