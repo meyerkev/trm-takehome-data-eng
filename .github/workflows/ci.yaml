@@ -117,7 +117,7 @@ jobs:
         with:
           commenter_type: plan
           commenter_input: ${{ format('{0}{1}', steps.plan.outputs.stdout, steps.plan.outputs.stderr) }}
-          commenter_exitcode: ${{ if steps.plan.outcome == 'success' }}0{{ else }}1{{ endif }}
+          commenter_exitcode: ${{ steps.plan.outcome == 'success' && 0 || 1 }}
   apply:
     runs-on: ubuntu-latest
     env:
