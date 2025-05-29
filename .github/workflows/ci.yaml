@@ -150,4 +150,5 @@ jobs:
         run: |
           cd terraform/helm/
           terraform init
-          terraform apply plan.out
+          terraform plan -out plan.out
+          terraform apply -auto-approve
