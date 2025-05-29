@@ -108,16 +108,13 @@ jobs:
           cd terraform/helm/
           aws sts get-caller-identity
           terraform init
-          terraform plan -out plan.out
-      - uses: robburger/terraform-pr-commenter@v1.5.0
-        if: ${{ always() && github.ref != 'refs/heads/master' && (steps.plan.outcome == 'success' || steps.plan.outcome == 'failure') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EXPAND_SUMMARY_DETAILS: 'true' 
-        with:
-          commenter_type: plan
-          commenter_input: ${{ format('{0}{1}', steps.plan.outputs.stdout, steps.plan.outputs.stderr) }}
-          commenter_exitcode: ${{ steps.plan.outcome == 'success' && 0 || 1 }}
+          terraform plan -out plan.out > plan.txt
+      ## TODO: Pulumi has a very nice way to do this, but I'm not sure how to do it with Terraform. 
+      - name: Write plan to PR
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "plan=$(cat plan.txt)" | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
+        
   apply:
     runs-on: ubuntu-latest
     env:
