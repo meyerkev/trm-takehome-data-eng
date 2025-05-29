@@ -115,7 +115,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo "plan=$(cat plan.txt)" | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
-        
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   apply:
     runs-on: ubuntu-latest
     env:
