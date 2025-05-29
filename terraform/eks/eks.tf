@@ -89,6 +89,14 @@ module "eks-auth" {
     }
   ] : [])
   
+  aws_auth_roles = [
+    {
+      rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/github-actions-role-terraform"
+      username = "github-actions-terraform"
+      groups   = ["system:masters"]
+    }
+  ]
+  
   depends_on = [ null_resource.sleep ]
 }
 
