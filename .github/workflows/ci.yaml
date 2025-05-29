@@ -111,6 +111,7 @@ jobs:
           terraform plan -out plan.out > plan.txt
       ## TODO: Pulumi has a very nice way to do this, but I'm not sure how to do it with Terraform. 
       - name: Write plan to PR
+        working-directory: terraform/helm/
         if: github.event_name == 'pull_request'
         run: |
           echo "plan=$(cat plan.txt)" | gh pr comment ${{ github.event.pull_request.number }} --body-file - || gh pr comment ${{ github.event.pull_request.number }} --body "Failed to write plan.out to the PR"
