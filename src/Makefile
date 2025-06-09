@@ -6,7 +6,7 @@ IMAGE_TAG ?= latest
 docker-build:
 	docker buildx build . -t $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/trm-takehome:$(IMAGE_TAG)
 up:
-	docker-compose up -d
+	docker-compose up --build -d
 down:
 	docker-compose down
 reset: down up
