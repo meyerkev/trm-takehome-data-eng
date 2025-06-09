@@ -28,3 +28,9 @@ mkdir -p ~/.kube
 kubeconfig_command=$(terraform output -raw kubeconfig_command)
 $kubeconfig_command
 
+cd ../helm
+terraform init $TF_INIT_ARGS
+terraform apply -auto-approve
+
+cd ../
+# kubectl apply -f secret.yaml
