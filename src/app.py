@@ -94,51 +94,6 @@ def address_balance(address):
 
   return res
 
-@app.route('/eth_gettransactionbyhash/<hash>')
-def eth_gettransactionbyhash(hash):
-  try:
-    # Get the INFURA_API_KEY from environment variables
-    infura_api_key = os.environ.get('INFURA_API_KEY')
-    if not infura_api_key:
-      return {
-        "data": {},
-        "success": False,
-        "error": "INFURA_API_KEY not found"
-      }
-
-    # Make the API call to Infura
-    # https://docs.metamask.io/services/reference/ethereum/json-rpc-methods/eth_gettransactionbyhash/
-    url = f"https://mainnet.infura.io/v3/{infura_api_key}"
-    headers = {"Content-Type": "application/json"}
-    payload = {
-      "jsonrpc": "2.0",
-      "method": "eth_getTransactionByHash",
-      "params": [hash],
-      "id": 1
-    }
-
-    response = requests.post(url, json=payload, headers=headers)
-    response_data = response.json()
-
-    if response.status_code == 200 and 'result' in response_data:
-      res = {
-        "data": response_data['result']
-      }
-    else:
-      res = {
-        "data": {},
-        "success": False,
-        "error": response_data.get('error', 'Unknown error')
-      }
-  except Exception as e:
-    res = {
-      "data": {},
-      "success": False,
-      "error": str(e)
-    }
-
-  return res
-
 @app.route('/')
 def index():
   # Redirect to /address/exposure/direct

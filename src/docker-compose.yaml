@@ -1,10 +1,9 @@
 services:
   trm-app:
-    build: .
+    image: meyerkev248/trm-takehome:latest
     environment:
       FLASK_APP: /app/app.py
       FLASK_ENV: development
-      INFURA_API_KEY: ${INFURA_API_KEY}
     # 5000 is eaten by Airplay on OSX sorry
     ports:
       - 4000:5000
